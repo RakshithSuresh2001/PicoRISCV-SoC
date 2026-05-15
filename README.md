@@ -144,5 +144,7 @@ PASS [Test 5] SA all 8 outputs correct
 ## Author
 
 Rakshith Suresh — MS EE, USC
+
 LinkedIn: https://linkedin.com/in/rakshith-suresh-890329258
+
 GitHub: https://github.com/RakshithSuresh2001
