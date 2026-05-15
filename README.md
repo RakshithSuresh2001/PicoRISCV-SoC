@@ -138,29 +138,6 @@ Expected result: identity matrix × [1,2,3,4,5,6,7,8] = [1,2,3,4,5,6,7,8] across
 
 ---
 
-## Tool Flow
-SystemVerilog RTL + C firmware
-|
-v
-+---------+
-|  Yosys  |  Logic synthesis -> standard cells
-|  Synth  |  Liberty frontend + ABC optimization
-+----+----+
-|  gate-level netlist
-v
-+--------------------------------------------------+
-|                  OpenROAD v2.0                   |
-|  +----------+  +-------+  +-----+  +--------+   |
-|  | Floorplan|->| Place |->| CTS |->| Route  |   |
-|  | PDN, IOs |  | GP+DP |  |     |  | GR+DR  |   |
-|  +----------+  +-------+  +-----+  +--------+   |
-+----+---------------------------------------------+
-|  routed DEF + ODB + SPEF
-v
-+---------+
-| KLayout |  GDS merge -> 6_final.gds
-+---------+
-
 ### Flow Steps and Runtime
 
 | Step | Description | Time |
