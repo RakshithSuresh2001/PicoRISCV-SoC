@@ -46,7 +46,8 @@ wire [ 3:0] mem_wstrb;          // byte enables (0000 = read)
 reg  [31:0] mem_rdata;          // read data back to CPU
 
 // IRQ (16-bit, tied off in Phase 1)
-wire [31:0] irq = 32'b0;
+wire sa_done;
+wire [31:0] irq = {31'b0, sa_done};
 
 // ---------------------------------------------------------------------------
 // 2. PicoRV32 instantiation
@@ -277,7 +278,8 @@ systolic_array u_sa (
     .weight_row       (mux_weight_row),
     .weight_data_flat (mux_weight_data_flat),
     .act_in_flat      (mux_act_in_flat),
-    .psum_out_flat    (sa_psum_out_flat)
+    .psum_out_flat    (sa_psum_out_flat),
+    .done             (sa_done)
 );
 
 // ---------------------------------------------------------------------------

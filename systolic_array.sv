@@ -28,7 +28,9 @@ module systolic_array #(
     input  wire [ROWS*DATA_W-1:0]        act_in_flat,
 
     // Flattened partial sum outputs: COLS * ACC_W bits
-    output reg  [COLS*ACC_W-1:0]         psum_out_flat
+    output reg  [COLS*ACC_W-1:0]         psum_out_flat,
+    // Done pulse — fires 12 cycles after last activation
+    output reg                           done
 );
 
     // Unpack weight_data and act_in from flat ports
@@ -121,5 +123,22 @@ module systolic_array #(
             assign psum_out_flat[(o+1)*ACC_W-1 : o*ACC_W] = psum_out[o];
         end
     endgenerate
+
+// ---------------------------------------------------------------------------
+// Done signal — shift register tracks activation valid through pipeline
+// ---------------------------------------------------------------------------
+reg [11:0] act_valid_sr;
+wire       act_valid = |act_in_flat;
+
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        act_valid_sr <= 12'b0;
+        done         <= 1'b0;
+    end else begin
+        act_valid_sr <= {act_valid_sr[10:0], act_valid};
+        done         <= act_valid_sr[11] & ~act_valid_sr[10];
+    end
+end
+
 
 endmodule
