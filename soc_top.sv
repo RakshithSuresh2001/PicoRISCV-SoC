@@ -26,7 +26,12 @@ module soc_top (
 
     // UART (Phase 1 debug output)
     output wire uart_tx,
-    input  wire uart_rx
+    input  wire uart_rx,
+    // SPI (Phase 3)
+    input  wire spi_clk,
+    input  wire spi_cs_n,
+    input  wire spi_mosi,
+    output wire spi_miso
 );
 
 // ---------------------------------------------------------------------------
@@ -87,12 +92,14 @@ picorv32 #(
 wire sel_isram;   // instruction SRAM
 wire sel_dsram;   // data SRAM
 wire sel_uart;    // UART peripheral
+wire sel_spi;     // SPI peripheral
 wire sel_sa;
 
 assign sel_sa = mem_valid && !mem_instr && (mem_addr[31:8] == 24'h100000);
 assign sel_isram = mem_valid && (mem_addr[31:16] == 16'h0000);
 assign sel_dsram = mem_valid && ~mem_instr && (mem_addr[31:16] == 16'h0001);
 assign sel_uart  = mem_valid && !mem_instr && (mem_addr[31:16] == 16'h2000);
+assign sel_spi   = mem_valid && !mem_instr && (mem_addr[31:16] == 16'h2001);
 
 // ---------------------------------------------------------------------------
 // 4. Instruction SRAM (64 KB = 16K × 32-bit words)
@@ -247,21 +254,61 @@ axilite_slave u_axilite (
     .mem_wstrb        (mem_wstrb),
     .mem_ready        (),
     .mem_rdata        (sa_rdata),
-    .weight_load      (sa_weight_load),
-    .weight_row       (sa_weight_row),
-    .weight_data_flat (sa_weight_data_flat),
-    .act_in_flat      (sa_act_in_flat),
+    .weight_load      (mux_weight_load),
+    .weight_row       (mux_weight_row),
+    .weight_data_flat (mux_weight_data_flat),
+    .act_in_flat      (mux_act_in_flat),
     .psum_out_flat    (sa_psum_out_flat)
 );
 
+// ---------------------------------------------------------------------------
+// Mux: SPI takes priority over AXI-Lite when spi_cs_n is low
+// ---------------------------------------------------------------------------
+wire        mux_weight_load      = spi_cs_n ? sa_weight_load       : spi_weight_load;
+wire [2:0]  mux_weight_row       = spi_cs_n ? sa_weight_row        : spi_weight_row;
+wire [63:0] mux_weight_data_flat = spi_cs_n ? sa_weight_data_flat  : spi_weight_data_flat;
+wire [63:0] mux_act_in_flat      = spi_cs_n ? sa_act_in_flat       : spi_act_in_flat;
+wire        mux_rst_n            = rst_n & (spi_cs_n ? 1'b1 : spi_array_rst_n);
+
 systolic_array u_sa (
     .clk              (clk),
-    .rst_n            (rst_n),
-    .weight_load      (sa_weight_load),
-    .weight_row       (sa_weight_row),
-    .weight_data_flat (sa_weight_data_flat),
-    .act_in_flat      (sa_act_in_flat),
+    .rst_n            (mux_rst_n),
+    .weight_load      (mux_weight_load),
+    .weight_row       (mux_weight_row),
+    .weight_data_flat (mux_weight_data_flat),
+    .act_in_flat      (mux_act_in_flat),
     .psum_out_flat    (sa_psum_out_flat)
+);
+
+// ---------------------------------------------------------------------------
+// 9. SPI Slave (Phase 3) — direct access to systolic array
+// ---------------------------------------------------------------------------
+wire        spi_weight_load;
+wire [2:0]  spi_weight_row;
+wire [63:0] spi_weight_data_flat;
+wire [63:0] spi_act_in_flat;
+wire        spi_array_rst_n;
+wire        spi_busy;
+
+spi_slave #(
+    .ROWS   (8),
+    .COLS   (8),
+    .DATA_W (8),
+    .ACC_W  (32)
+) u_spi (
+    .clk             (clk),
+    .rst_n           (rst_n),
+    .spi_clk         (spi_clk),
+    .spi_cs_n        (spi_cs_n),
+    .spi_mosi        (spi_mosi),
+    .spi_miso        (spi_miso),
+    .weight_load     (spi_weight_load),
+    .weight_row      (spi_weight_row),
+    .weight_data_flat(spi_weight_data_flat),
+    .act_in_flat     (spi_act_in_flat),
+    .array_rst_n     (spi_array_rst_n),
+    .psum_out_flat   (sa_psum_out_flat),
+    .busy            (spi_busy)
 );
 
 endmodule

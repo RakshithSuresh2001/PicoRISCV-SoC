@@ -17,7 +17,11 @@ soc_top u_dut (
     .clk     (clk),
     .rst_n   (rst_n),
     .uart_tx (uart_tx_wire),
-    .uart_rx (uart_rx_wire)
+    .uart_rx  (uart_rx_wire),
+    .spi_clk  (1'b0),
+    .spi_cs_n (1'b1),
+    .spi_mosi (1'b0),
+    .spi_miso ()
 );
 
 // Watchdog
@@ -61,20 +65,20 @@ initial begin
     begin : wait_fw
         integer i;
         for (i = 0; i < 500000; i = i + 1) begin
-            if (u_dut.dsram[14'h49] === 32'h600DC0DE)
+            if (u_dut.dsram[8'h49] === 32'h600DC0DE)
                 i = 600000;
             else
                 repeat(10) @(posedge clk);
         end
     end
 
-    if (u_dut.dsram[14'h49] === 32'h600DC0DE)
+    if (u_dut.dsram[8'h49] === 32'h600DC0DE)
         $display("INFO firmware completed OK");
     else
         $display("FAIL firmware did not complete");
 
     // Test 3: sentinel
-    sentinel = u_dut.dsram[14'h40];
+    sentinel = u_dut.dsram[8'h40];
     if (sentinel === 32'hDEADBEEF)
         $display("PASS [Test 3] DSRAM sentinel correct");
     else
@@ -93,7 +97,7 @@ initial begin
         integer r;
         fail5 = 0;
         for (r = 0; r < 8; r = r + 1) begin
-            result = u_dut.dsram[14'h41 + r];
+            result = u_dut.dsram[8'h41 + r];
             if (result !== r + 1) begin
                 $display("FAIL [Test 5] col%0d got=%0d exp=%0d", r, result, r+1);
                 fail5 = 1;
