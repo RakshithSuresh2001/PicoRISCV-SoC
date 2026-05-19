@@ -79,6 +79,10 @@ All simulation tests passing:
 cd picorv32_soc
 make sim
 ```
+## Layout
+<img width="829" height="829" alt="Screenshot 2026-05-18 170441" src="https://github.com/user-attachments/assets/f39d6087-d789-4f3a-95f3-51fa32f0a809" />
+
+---
 
 ## Repository Structure
 
