@@ -48,11 +48,11 @@ A RISC-V SoC integrating a PicoRV32 CPU with an 8×8 systolic array ML accelerat
 |--------|-------|
 | Technology | ASAP7 7nm FinFET (academic PDK) |
 | Clock Frequency | 500 MHz |
-| Total Cells | 47,051 |
-| Logic Area | 5,431 µm² |
+| Total Cells | 44,930 |
+| Logic Area | 5,683 µm² |
 | SRAM Macros | 2× Fakeram7 256×32 (Fakeram) |
 | Sequential Elements | 28.19% (5,251 FFs) |
-| WNS | −694 ps (picorv32 ALU path) |
+| Timing | Setup +863 ps, hold +25 ps at 500 MHz (ASAP7 FF), 0 DRC |
 | Total Power | ~10 W @ 50% toggle rate (pre-silicon estimate) |
 | DRC Violations | 0 |
 
